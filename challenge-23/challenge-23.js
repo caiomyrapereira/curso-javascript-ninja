@@ -24,7 +24,6 @@ input;
 - Ao pressionar o botão "CE", o input deve ficar zerado.
 */
 ( function( wind , doc){
- 
  'use strict';
 
  var $input = doc.querySelector('input'); 
@@ -33,85 +32,80 @@ input;
  var $buttonCe  = doc.querySelector('[data-js="ce"]');
  var $buttonResultado = doc.querySelector('[data-js="="]');
 
+ function initialize(){
+  initEvent()
+ }
 
- // 
+ function initEvent(){
   Array.prototype.forEach.call( $buttonNumber , atribuirNumber    )
   Array.prototype.forEach.call( $buttonOperacoes , atribuirOperador  )
   $buttonCe.addEventListener( 'click' , atribuirClear , false )
   $buttonResultado.addEventListener('click', atribuirResultado , false)
- //
-
-
-
- function  atribuirNumber( item ){
-      
-         item.onclick = function(){
-           
-           var regex = /(^0\d)+/gm;
-      
-           $input.value +=   item.innerHTML;
-           $input.value = $input.value.replace( regex ,item.innerHTML);
-          
-       }
  }
 
+ function  atribuirNumber( elem ){
+  elem.onclick = function(){
+    var regex = /(^0\d)+/gm;
+    $input.value +=   elem.innerHTML;
+    $input.value  = $input.value.replace(regex , elem.innerHTML );
+  }
+ }
 
- function atribuirOperador( item ){
-
-      item.onclick = function(){
-
-          var regex = /[\+\-\x\÷]$/g;
-         
-          if( regex.test( $input.value ) )
-           $input.value  = $input.value.replace(regex , item.innerHTML );
-          else
-           $input.value+= item.innerHTML;
- 
-      }
+ function atribuirOperador( elem ){
+  elem.onclick = function(){
+    removeUltimoItem( RegExp('['+ operadores() +']$','g') , elem  ) 
+  }
  }  
- 
 
- function atribuirClear(){
-
-     $input.value = 0;
-
+ function operadores(){ 
+  return Array.prototype.map.call( $buttonOperacoes , function( operador ){
+    return  '\\'+ operador.innerHTML;
+  } ).join('')
  }
 
+ function  removeUltimoItem(regex , elem){
+  if( regex.test( $input.value ) )
+    $input.value  = $input.value.replace(regex , elem.innerHTML );
+  else
+    $input.value+= elem.innerHTML;
+ }
+ 
+ function atribuirClear(){
+     $input.value = 0;
+ }
 
  function atribuirResultado(){
-
-  var regex1  = /(\d+)([\x\÷])(\d+)/g;
-  var regex2  = /(\d+)([\+\-])(\d+)/g;
   var value   = $input.value;
-
-  if( regex1.test( $input.value ) )
-  $input.value = value.replace(regex1 , primeiraOrdem )
-  else if( regex2.test( $input.value ) )
-  $input.value = value.replace(regex2 , segundaOrdem  )
+  if( !!ordemAritmetica( $input.value ) )
+     $input.value = value.replace( ordemAritmetica( value ) , doOperations )
   else
-  return 'Trabalho finalizado.';
-   
+     return 'Trabalho finalizado.';
   atribuirResultado();
-
  }
 
- function primeiraOrdem(regex,n1,operador,n2){
-     
-	if( operador === 'x' )
-	return +n1 * +n2;
-    else if( operador === '÷' )
-    return +n1 / +n2;
-
+ function  ordemAritmetica(value){
+ var primeiraOrdem = RegExp( '([-]?\\d+)([x÷])(\\d+)','g');
+ var segundaOrdem  = RegExp( '([-]?\\d+)([+-])(\\d+)','g');
+ if(primeiraOrdem.test( value )) 
+    return  primeiraOrdem
+ else if(segundaOrdem.test( value ))
+    return segundaOrdem;
+  return false; 
  }
- function segundaOrdem(regex,n1,operador,n2){
+ 
+ function doOperations( regex , firstValue , operator ,lastValue ){
+     switch(operator) {
+      case '+':
+        return Number(firstValue) + Number(lastValue);
+      case '-':
+        return Number(firstValue) - Number(lastValue);
+      case 'x':
+        return Number(firstValue) * Number(lastValue);
+      case '÷':
+        return Number(firstValue) / Number(lastValue);
+    }
+ }
   
-    if( operador === '+' )
-	return +n1 + +n2;
-    else if( operador === '-' )
-    return +n1 - +n2;
-
-	
- }
-
-
+ initialize();
+ 
 } )( window ,  document )
